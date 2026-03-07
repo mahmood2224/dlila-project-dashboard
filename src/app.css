@@ -1,0 +1,199 @@
+/* Global CSS with 3-Color Constraint & Light/Dark Mode */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Default to Dark Mode variables */
+  --c-base-h: 240;
+  --c-base-s: 10%;
+  --c-base-l: 4%;
+
+  --c-contrast-h: 0;
+  --c-contrast-s: 0%;
+  --c-contrast-l: 98%;
+
+  --c-primary-h: 238;
+  --c-primary-s: 86%;
+  --c-primary-l: 67%;
+
+  /* Derived Colors */
+  --bg-color: hsl(var(--c-base-h), var(--c-base-s), var(--c-base-l));
+  --text-color: hsl(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l));
+  --primary-color: hsl(var(--c-primary-h), var(--c-primary-s), var(--c-primary-l));
+
+  /* Surface colors */
+  --surface-bg: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.05);
+  --surface-border: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.1);
+  --surface-hover: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.08);
+
+  --shadow-sm: 0 1px 2px 0 hsla(0, 0%, 0%, 0.3);
+  --shadow-lg: 0 10px 15px -3px hsla(0, 0%, 0%, 0.5), 0 4px 6px -4px hsla(0, 0%, 0%, 0.5);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='light'] {
+  --c-base-h: 0;
+  --c-base-s: 0%;
+  --c-base-l: 98%;
+
+  --c-contrast-h: 240;
+  --c-contrast-s: 10%;
+  --c-contrast-l: 4%;
+
+  --c-primary-h: 238;
+  --c-primary-s: 86%;
+  --c-primary-l: 60%;
+
+  --surface-bg: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.03);
+  --surface-border: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.08);
+  --surface-hover: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.06);
+
+  --shadow-sm: 0 1px 2px 0 hsla(0, 0%, 0%, 0.05);
+  --shadow-lg: 0 10px 15px -3px hsla(0, 0%, 0%, 0.1), 0 4px 6px -4px hsla(0, 0%, 0%, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.glass-panel {
+  background: var(--surface-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-layer {
+  background: hsla(var(--c-base-h), var(--c-base-s), var(--c-base-l), 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Layout Utilities */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+/* Margins/Padding Configs */
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--c-contrast-h), var(--c-contrast-s), var(--c-contrast-l), 0.2);
+}
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .sidebar {
+  margin: 1rem 1rem 1rem 0;
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
+[dir="rtl"] .main-content {
+  padding: 1rem 2rem 1rem 1rem;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-left: 0;
+  margin-right: 0.75rem;
+}
+
+[dir="rtl"] .mr-3,
+[dir="rtl"] .mr-2 {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .rtl-pad {
+  padding-right: 0.75rem !important;
+  padding-left: 2rem !important;
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] th,
+[dir="rtl"] td.text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
