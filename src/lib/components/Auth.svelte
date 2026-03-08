@@ -475,11 +475,14 @@
     .-mt-2 {
         margin-top: -0.5rem;
     }
-    .mr-3 {
-        margin-right: 0.75rem;
+    :global(.mr-3) {
+        margin-inline-end: 0.75rem;
     }
-    .ml-2 {
-        margin-left: 0.5rem;
+    :global(.mr-2) {
+        margin-inline-end: 0.5rem;
+    }
+    :global(.ml-2) {
+        margin-inline-start: 0.5rem;
     }
     .py-3 {
         padding-top: 0.75rem;

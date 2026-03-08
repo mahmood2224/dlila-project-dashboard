@@ -10,6 +10,7 @@
     } from "lucide-svelte";
     import { goto } from "$app/navigation";
     import Modal from "../ui/Modal.svelte";
+    import Notifications from "../Views/Notifications.svelte";
 
     // If somehow a direct routing hits dashboard and user/project is missing
     if (!$currentProject) {
@@ -24,6 +25,7 @@
     }
 
     let showLogoutModal = false;
+    let showNotifications = false;
 
     function confirmLogout() {
         goto("/auth");
@@ -53,10 +55,21 @@
                     />
                 </div>
 
-                <button class="icon-btn">
-                    <Bell size={20} />
-                    <span class="notification-dot"></span>
-                </button>
+                <div class="relative flex items-center">
+                    <button
+                        class="icon-btn"
+                        title={$dict.notifications?.title || "Notifications"}
+                        on:click={() =>
+                            (showNotifications = !showNotifications)}
+                    >
+                        <Bell size={20} />
+                        <span class="notification-dot"></span>
+                    </button>
+
+                    {#if showNotifications}
+                        <Notifications />
+                    {/if}
+                </div>
 
                 <button
                     class="icon-btn"
@@ -123,6 +136,11 @@
         display: flex;
         flex-direction: column;
         overflow-y: auto;
+    }
+    :global([dir="rtl"]) .main-content {
+        margin-left: 0;
+        margin-right: 260px;
+        padding: 1rem 2rem 1rem 1rem;
     }
 
     .topbar {
@@ -204,6 +222,10 @@
     :global([dir="rtl"]) :global(.search-icon) {
         left: auto;
         right: 1rem;
+    }
+
+    .relative {
+        position: relative;
     }
 
     .search-input {

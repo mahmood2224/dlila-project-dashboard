@@ -223,5 +223,21 @@ export const en = {
         subTitle: "Monitor your exact consumption, running costs, and hard limits.",
         limitsDetails: "Limit Details",
         costHistory: "Cost History"
+    },
+
+    // Notifications
+    notifications: {
+        title: "Notifications",
+        subTitle: "Stay updated on system alerts, team activity, and billing events.",
+        markAllRead: "Mark all as read",
+        emptyState: "You have no new notifications.",
+        showMore: "Show more",
+        showLess: "Show less",
+        timeAgo: {
+            justNow: "Just now",
+            minsAgo: "mins ago",
+            hoursAgo: "hours ago",
+            daysAgo: "days ago"
+        }
     }
 };

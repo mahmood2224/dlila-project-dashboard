@@ -1,33 +1,22 @@
 <script>
-    export let type = "text";
     export let id = "";
     export let placeholder = "";
     export let value = "";
     export let label = "";
-    export let icon = null;
+    export let rows = 4;
 </script>
 
 <div class="input-group">
     {#if label}
         <label
             for={id}
-            class="text-sm font-medium mb-3 inline-block"
+            class="text-sm font-medium mb-2 inline-block"
             style="text-align: start;">{label}</label
         >
     {/if}
     <div class="input-wrapper">
-        {#if icon}
-            <div class="icon-container">
-                <svelte:component this={icon} size={18} />
-            </div>
-        {/if}
-        <input
-            {type}
-            {id}
-            {placeholder}
-            bind:value
-            class="custom-input {icon ? 'has-icon' : ''}"
-        />
+        <textarea {id} {placeholder} {rows} bind:value class="custom-textarea"
+        ></textarea>
     </div>
 </div>
 
@@ -42,28 +31,10 @@
     .input-wrapper {
         position: relative;
         display: flex;
-        align-items: center;
+        width: 100%;
     }
 
-    .icon-container {
-        position: absolute;
-        inset-inline-start: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: hsla(
-            var(--c-contrast-h),
-            var(--c-contrast-s),
-            var(--c-contrast-l),
-            0.5
-        );
-    }
-
-    :global(.has-icon) {
-        padding-inline-start: 2.75rem !important;
-    }
-
-    .custom-input {
+    .custom-textarea {
         width: 100%;
         padding: 0.75rem 1rem;
         font-family: inherit;
@@ -80,9 +51,11 @@
         outline: none;
         transition: border-color var(--transition-fast);
         box-sizing: border-box;
+        resize: vertical;
+        min-height: 80px;
     }
 
-    .custom-input:focus {
+    .custom-textarea:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 2px
             hsla(

@@ -77,7 +77,7 @@ export const ar = {
         goToDashboard: "الذهاب للوحة القيادة"
     },
 
-    // Analytics... (simplified for now to save tokens, we will use basic fallbacks where needed or just full translation)
+    // Analytics
     analytics: {
         overviewTitle: "نظرة عامة على المشروع",
         overviewSub: "إليك ما يحدث مع مساعدك الذكي اليوم.",
@@ -106,57 +106,138 @@ export const ar = {
         externalSources: "مصادر خارجية",
         recentActivity: "النشاط الأخير",
         viewAll: "عرض الكل",
+        activityTypes: {
+            pdfParsed: "تمت أرشفة ونمذجة الملف بنجاح",
+            apiKeyGen: "تم إنشاء مفتاح API قياسي",
+            costLimit: "تم بلوغ الحد الشهري للتكلفة (95%)",
+            inviteSent: "تم إرسال دعوات للفريق"
+        },
         tokenConsumption: "استهلاك الرموز",
         totalCost: "التكلفة الإجمالية",
         monthlyLimit: "الحد الشهري"
     },
 
+    // Audit
     audit: {
         title: "سجل المحادثات",
         subTitle: "مراجعة المحادثات الذكية الأخيرة للجودة والدقة.",
         recentSessions: "الجلسات الأخيرة",
+        searchPlaceholder: "البحث في المحادثات...",
+        filters: "تصفية",
         sessionDetails: "تفاصيل الجلسة",
-        sessionCost: "تكلفة الجلسة"
+        selectSession: "الرجاء تحديد جلسة من القائمة لعرض التفاصيل.",
+        sessionCost: "تكلفة الجلسة",
+        sourceVerification: "التحقق من المصدر",
+        verified: "مُوثق",
+        groundedIn: "معتمد على"
     },
 
+    // Billing
     billing: {
         title: "الفواتير والاشتراك",
         subTitle: "إدارة استخدام واجهة برمجة التطبيقات وحصص الملفات وخطط الاشتراك.",
         quotaMonitoring: "مراقبة الحصص",
-        update: "تحديث"
+        docUploads: "رفع المستندات",
+        remaining: "المتبقي:",
+        vectorStorage: "تخزين المتجهات",
+        limit: "الحد:",
+        availablePlans: "الخطط المتاحة",
+        currentPlan: "الخطة الحالية",
+        proPlan: "خطة المحترفين",
+        enterprisePlan: "خطة الشركات",
+        starterPlan: "خطة البداية",
+        perMonth: "/شهر",
+        features: "المميزات",
+        upgrade: "ترقية",
+        contactSales: "تواصل مع المبيعات"
     },
 
+    // Knowledge
     knowledge: {
         title: "قاعدة المعرفة",
         subTitle: "قم بتحميل ملفات PDF، و Markdown، والنصوص لتدريب مساعدك.",
         uploadDocs: "تحميل الملفات",
-        targetDept: "تحديد القسم",
+        dragDrop: "اسحب وأفلت الملفات هنا",
+        selectFiles: "أو انقر لتصفح الملفات",
+        supportedFormats: "الصيغ المدعومة: PDF, TXT, MD, DOCX (كحد أقصى 20 ميجا)",
+        uploadSettings: "إعدادات الرفع",
+        targetDept: "تحديد القسم المستهدف",
+        deptHelper: "سيتم عزل المستندات ضمن قاعدة المعرفة لهذا القسم.",
+        deptGen: "العمليات العامة",
+        deptHR: "الموارد البشرية",
+        deptSales: "مواد المبيعات",
+        deptEng: "الدعم التقني",
         indexedFiles: "ملفات مفهرسة",
-        fileName: "الاسم",
+        refreshStatus: "تحديث الحالة",
+        fileName: "اسم الملف",
         dept: "القسم",
         status: "الحالة",
         date: "التاريخ",
-        actions: "إجراءات"
+        actions: "إجراءات",
+        noDocs: "لم يتم تحميل أي ملفات.",
+        statusReady: "جاهز",
+        statusProc: "قيد المعالجة",
+        statusPend: "في الانتظار",
+        statusFail: "فشل",
+        justNow: "الآن"
     },
 
+    // Playground
     playground: {
         headerMode: "بيئة اختبار المساعد الذكي",
-        welcome: "مرحباً! أنا مساعدك الذكي.",
+        welcome: "مرحباً! أنا مساعدك الذكي. أنا متصل بقاعدة المعرفة الخاصة بك. كيف يمكنني مساعدتك؟",
+        placeholder: "اكتب سؤالاً حول مستنداتك المفهرسة...",
         assistant: "المساعد",
-        you: "أنت"
+        you: "أنت",
+        typing: "الذكاء الاصطناعي يفكّر",
+        params: "إعدادات النموذج",
+        model: "النموذج",
+        temperature: "درجة الإبداع",
+        topP: "Top P",
+        maxTokens: "الحد الأقصى للرموز",
+        systemPrompt: "أوامر النظام",
+        traceability: "تتبع المصادر"
     },
 
+    // Settings
     settingsView: {
         title: "إعدادات المشروع",
         subTitle: "إدارة تفاصيل مشروعك والأمان.",
         general: "التفاصيل العامة",
+        generalSub: "تحديث التفاصيل الأساسية للمشروع.",
         members: "أعضاء الفريق",
+        membersSub: "إدارة صلاحيات الوصول لهذا المشروع.",
         security: "الأمان",
+        securitySub: "تحديث كلمة المرور الخاصة بك.",
+        descHelper: "بحد أقصى 50 كلمة حول هدف وتوجه هذا المساعد الذكي.",
+        addMember: "إضافة عضو",
+        currentPass: "كلمة المرور الحالية",
+        newPass: "كلمة المرور الجديدة",
+        confirmPass: "تأكيد كلمة المرور",
         updatePass: "تحديث كلمة المرور"
     },
 
+    // Usage
     usageView: {
         title: "الاستخدام المفصل",
-        subTitle: "مراقبة استهلاكك الدقيق وتكاليف التشغيل."
+        subTitle: "مراقبة استهلاكك الدقيق وتكاليف التشغيل.",
+        limitsDetails: "تفاصيل حدود الاستخدام",
+        costHistory: "سجل التكلفة"
+    },
+
+    // Notifications
+    notifications: {
+        title: "الإشعارات",
+        subTitle: "ابق مطلعاً على تنبيهات النظام، نشاط الفريق، وأحداث الفواتير.",
+        markAllRead: "تحديد الكل كمقروء",
+        emptyState: "لا توجد إشعارات جديدة.",
+        showMore: "عرض المزيد",
+        showLess: "عرض أقل",
+        timeAgo: {
+            justNow: "الآن",
+            minsAgo: "دقائق مضت",
+            hoursAgo: "ساعات مضت",
+            daysAgo: "أيام مضت"
+        }
     }
 };

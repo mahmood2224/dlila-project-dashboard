@@ -130,6 +130,11 @@
         display: flex;
         z-index: 40;
     }
+    :global([dir="rtl"]) .sidebar {
+        left: auto;
+        right: 0;
+        margin: 1rem 1rem 1rem 0;
+    }
 
     .logo-icon {
         width: 36px;
@@ -159,8 +164,8 @@
     .mt-2 {
         margin-top: 0.5rem;
     }
-    .mr-3 {
-        margin-right: 0.75rem;
+    :global(.mr-3) {
+        margin-inline-end: 0.75rem;
     }
     .gap-3 {
         gap: 0.75rem;

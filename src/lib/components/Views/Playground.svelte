@@ -11,7 +11,6 @@
     // Model Params
     let temperature = 0.7;
     let maxTokens = 2000;
-    let systemPrompt = "You are a helpful AI assistant.";
 
     let chatHistory = [
         {
@@ -164,21 +163,6 @@
             </h3>
 
             <div class="flex-1 flex-col gap-6">
-                <!-- System Prompt -->
-                <div class="control-group">
-                    <label
-                        for="sysPrompt"
-                        class="text-sm font-semibold mb-2 block"
-                        >{$dict.playground.systemPrompt}</label
-                    >
-                    <textarea
-                        id="sysPrompt"
-                        bind:value={systemPrompt}
-                        class="config-textarea w-full"
-                        rows="4"
-                    ></textarea>
-                </div>
-
                 <!-- Temperature -->
                 <div class="control-group">
                     <div class="flex justify-between mb-2">

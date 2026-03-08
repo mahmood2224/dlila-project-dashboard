@@ -2,6 +2,9 @@
     import { dict } from "$lib/store.js";
     import Card from "../ui/Card.svelte";
     import Button from "../ui/Button.svelte";
+    import Modal from "../ui/Modal.svelte";
+    import Input from "../ui/Input.svelte";
+    import Textarea from "../ui/Textarea.svelte";
     import {
         UploadCloud,
         FolderOpen,
@@ -10,16 +13,45 @@
         Trash2,
         Clock,
         CheckCircle,
+        Plus,
     } from "lucide-svelte";
 
     let isDragging = false;
-    let selectedDepartment = "general";
+    let selectedDepartment = "";
+    let showCreateDeptModal = false;
+    let newDeptName = "";
+    let newDeptDesc = "";
+    let newDeptError = "";
 
-    const departments = [
+    // Live word count for validation
+    $: wordCount = newDeptDesc.trim()
+        ? newDeptDesc.trim().split(/\s+/).length
+        : 0;
+    $: isDeptValid = newDeptName.trim().length > 0 && wordCount >= 50;
+
+    let departments = [
         { id: "general", label: "General Operations" },
         { id: "hr", label: "HR & Benefits" },
         { id: "sales", label: "Sales Material" },
     ];
+
+    function handleCreateDept() {
+        if (!isDeptValid) {
+            newDeptError =
+                "Please ensure the name is filled and description is at least 50 words.";
+            return;
+        }
+
+        const newId = newDeptName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+        departments = [...departments, { id: newId, label: newDeptName }];
+        selectedDepartment = newId;
+
+        // Reset form
+        showCreateDeptModal = false;
+        newDeptName = "";
+        newDeptDesc = "";
+        newDeptError = "";
+    }
 
     const documents = [
         {
@@ -115,17 +147,28 @@
                 >
                     {$dict.knowledge.targetDept}
                 </label>
-                <div class="select-wrapper">
-                    <FolderOpen size={16} class="select-icon" />
-                    <select
-                        id="deptSelect"
-                        class="custom-select w-full"
-                        bind:value={selectedDepartment}
+                <div class="flex items-center gap-2">
+                    <div class="select-wrapper flex-1">
+                        <FolderOpen size={16} class="select-icon" />
+                        <select
+                            id="deptSelect"
+                            class="custom-select w-full"
+                            bind:value={selectedDepartment}
+                        >
+                            <option value="">No Department (Optional)</option>
+                            {#each departments as dept}
+                                <option value={dept.id}>{dept.label}</option>
+                            {/each}
+                        </select>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        on:click={() => (showCreateDeptModal = true)}
+                        className="px-3"
+                        title="Add New Department"
                     >
-                        {#each departments as dept}
-                            <option value={dept.id}>{dept.label}</option>
-                        {/each}
-                    </select>
+                        <Plus size={18} />
+                    </Button>
                 </div>
                 <p class="text-xs text-muted mt-3">
                     {$dict.knowledge.deptHelper}
@@ -220,6 +263,67 @@
         </div>
     </Card>
 </div>
+
+<!-- Create Department Modal -->
+<Modal
+    bind:open={showCreateDeptModal}
+    title="Create New Department"
+    description="Establish a new knowledge silo. A detailed description is required for the AI to understand its context."
+    confirmText="Create Department"
+    confirmVariant="primary"
+    on:confirm={handleCreateDept}
+    on:cancel={() => {
+        newDeptName = "";
+        newDeptDesc = "";
+        newDeptError = "";
+    }}
+>
+    <!-- We must hijack the default confirm to disable it if invalid, 
+         so we build our own footer replacing the modal's default action if we prefer, 
+         or just use the validation warning -->
+
+    <div class="pt-2">
+        <Input
+            id="deptName"
+            label="Department Name"
+            placeholder="e.g. Engineering Docs"
+            bind:value={newDeptName}
+        />
+
+        <div class="mt-4">
+            <Textarea
+                id="deptDesc"
+                label="Detailed Description (Min 50 words)"
+                placeholder="Explain the purpose of this department, what kind of documents will be stored here, and who should have access..."
+                rows={5}
+                bind:value={newDeptDesc}
+            />
+            <div class="flex justify-between items-center mt-1">
+                <span
+                    class="text-xs {wordCount < 50
+                        ? 'text-danger'
+                        : 'text-success'}"
+                >
+                    {wordCount} / 50 words minimum
+                </span>
+                {#if newDeptError}
+                    <span class="text-xs text-danger">{newDeptError}</span>
+                {/if}
+            </div>
+        </div>
+
+        <!-- Overriding the confirm button since the Modal component currently 
+             doesn't take a 'disabled' prop for the Confirm button -->
+        {#if !isDeptValid}
+            <div
+                class="mt-4 p-3 bg-danger/10 border border-danger/20 rounded text-sm text-danger flex items-center gap-2"
+            >
+                <span class="font-bold">Note:</span> You must write at least 50 words
+                to create this department.
+            </div>
+        {/if}
+    </div>
+</Modal>
 
 <style>
     .knowledge-container {
@@ -319,6 +423,19 @@
     }
     .font-medium {
         font-weight: 500;
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+    .bg-danger\/10 {
+        background: hsla(0, 84%, 60%, 0.1);
+    }
+    .border-danger\/20 {
+        border-color: hsla(0, 84%, 60%, 0.2);
+    }
+    .text-success {
+        color: #22c55e;
     }
 
     .text-muted {
