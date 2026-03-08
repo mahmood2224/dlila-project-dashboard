@@ -1,8 +1,15 @@
 <script>
     import { currentProject, currentUser, dict } from "$lib/store.js";
     import Sidebar from "./Sidebar.svelte";
-    import { Bell, Search, Settings } from "lucide-svelte";
+    import {
+        Bell,
+        Search,
+        Settings,
+        AlertTriangle,
+        LogOut,
+    } from "lucide-svelte";
     import { goto } from "$app/navigation";
+    import Modal from "../ui/Modal.svelte";
 
     // If somehow a direct routing hits dashboard and user/project is missing
     if (!$currentProject) {
@@ -14,6 +21,12 @@
     }
     if (!$currentUser) {
         currentUser.set({ name: "Demo User", email: "demo@example.com" });
+    }
+
+    let showLogoutModal = false;
+
+    function confirmLogout() {
+        goto("/auth");
     }
 </script>
 
@@ -64,7 +77,10 @@
                     </div>
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
-                    <div class="avatar" on:click={() => goto("/auth")}>
+                    <div
+                        class="avatar"
+                        on:click={() => (showLogoutModal = true)}
+                    >
                         {$currentUser?.name.charAt(0)}
                     </div>
                 </div>
@@ -77,6 +93,20 @@
         </main>
     </div>
 </div>
+
+<Modal
+    bind:open={showLogoutModal}
+    title={$dict.logout}
+    description="Are you sure you want to sign out? Your active session will be closed."
+    confirmText="Sign Out"
+    cancelText={$dict.cancel || "Cancel"}
+    confirmVariant="danger"
+    on:confirm={confirmLogout}
+>
+    <div slot="icon" style="color: #ef4444;">
+        <AlertTriangle size={24} />
+    </div>
+</Modal>
 
 <style>
     .dashboard-layout {

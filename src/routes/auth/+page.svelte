@@ -2,13 +2,15 @@
     import Auth from "$lib/components/Auth.svelte";
 </script>
 
-<div class="h-screen w-full flex items-center justify-center">
+<div class="h-full w-full flex items-center justify-center fade-in">
     <Auth />
 </div>
 
 <style>
-    .h-screen {
-        height: 100vh;
+    .h-full {
+        min-height: 100vh;
+        flex: 1;
+        display: flex;
     }
     .w-full {
         width: 100%;

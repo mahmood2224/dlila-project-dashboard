@@ -73,6 +73,14 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+html,
+body,
+#svelte {
+  height: 100%;
 }
 
 .glass-panel {

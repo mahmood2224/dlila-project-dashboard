@@ -3,6 +3,7 @@
     import { goto } from "$app/navigation";
     import { dict } from "$lib/store.js";
     import ProgressBar from "../ui/ProgressBar.svelte";
+    import Modal from "../ui/Modal.svelte";
     import {
         LayoutDashboard,
         MessageSquareQuote,
@@ -11,7 +12,10 @@
         CreditCard,
         LogOut,
         Activity,
+        AlertTriangle,
     } from "lucide-svelte";
+
+    let showLogoutModal = false;
 
     // Reconstruct Sidebar menu items pointing directly to actual SvelteKit routes
     const menuItems = [
@@ -27,6 +31,10 @@
 
     function handleNav(id) {
         goto(id);
+    }
+
+    function confirmLogout() {
+        goto("/auth");
     }
 </script>
 
@@ -86,12 +94,29 @@
         </div>
 
         <!-- Logout -->
-        <button class="nav-item logout w-full" on:click={() => goto("/auth")}>
+        <button
+            class="nav-item logout w-full"
+            on:click={() => (showLogoutModal = true)}
+        >
             <LogOut size={20} class="icon mr-3" />
             <span>{$dict.logout}</span>
         </button>
     </div>
 </aside>
+
+<Modal
+    bind:open={showLogoutModal}
+    title={$dict.logout}
+    description="Are you sure you want to sign out? Your active session will be closed."
+    confirmText="Sign Out"
+    cancelText={$dict.cancel || "Cancel"}
+    confirmVariant="danger"
+    on:confirm={confirmLogout}
+>
+    <div slot="icon" style="color: #ef4444;">
+        <AlertTriangle size={24} />
+    </div>
+</Modal>
 
 <style>
     .sidebar {

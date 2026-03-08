@@ -106,9 +106,9 @@
         flex-direction: column;
         background: var(--bg-color);
         color: var(--text-color);
-    }
-    .min-h-screen {
         min-height: 100vh;
+        width: 100%;
+        flex: 1;
     }
     .text-base {
         font-size: 1rem;
