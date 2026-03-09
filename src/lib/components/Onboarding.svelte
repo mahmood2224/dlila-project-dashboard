@@ -1,5 +1,6 @@
 <script>
     import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import { goto } from "$app/navigation";
     import Card from "./ui/Card.svelte";
     import Button from "./ui/Button.svelte";
@@ -34,14 +35,26 @@
         if (step > 1) step--;
     }
 
-    function finishOnboarding() {
-        currentProject.set({
-            name: projName,
-            domain: projDomain,
-            persona: selectedPersona,
-            description: projDesc,
-        });
-        goto("/analytics"); // Route straight to analytics layout
+    let isSubmitting = false;
+
+    async function finishOnboarding() {
+        isSubmitting = true;
+        try {
+            const res = await api.post("/projects", {
+                name: projName,
+                domain: projDomain,
+                persona: selectedPersona,
+                description: projDesc,
+            });
+            // The API returns the newly created project object
+            currentProject.set(res);
+            goto("/analytics"); // Route straight to analytics layout
+        } catch (e) {
+            console.error("Project Creation Error:", e);
+            alert(e.detail || "Failed to create project.");
+        } finally {
+            isSubmitting = false;
+        }
     }
 </script>
 
@@ -225,8 +238,11 @@
                         variant="primary"
                         on:click={finishOnboarding}
                         className="px-8"
+                        disabled={isSubmitting}
                     >
-                        {$dict.onboarding.goToDashboard}
+                        {isSubmitting
+                            ? "Creating..."
+                            : $dict.onboarding.goToDashboard}
                     </Button>
                 {/if}
             </div>

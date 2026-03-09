@@ -13,7 +13,8 @@ export const nodes = [
 	() => import('./nodes/9'),
 	() => import('./nodes/10'),
 	() => import('./nodes/11'),
-	() => import('./nodes/12')
+	() => import('./nodes/12'),
+	() => import('./nodes/13')
 ];
 
 export const server_loads = [];
@@ -23,9 +24,10 @@ export const dictionary = {
 		"/(dashboard)/analytics": [4,[2]],
 		"/(dashboard)/audit": [5,[2]],
 		"/auth": [11],
+		"/auth/callback": [12],
 		"/(dashboard)/billing": [6,[2]],
 		"/(dashboard)/knowledge": [7,[2]],
-		"/onboarding": [12],
+		"/onboarding": [13],
 		"/(dashboard)/playground": [8,[2]],
 		"/(dashboard)/settings": [9,[2]],
 		"/(dashboard)/usage": [10,[2]]

@@ -1,5 +1,6 @@
 <script>
-    import { dict } from "$lib/store.js";
+    import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import Card from "../ui/Card.svelte";
     import Button from "../ui/Button.svelte";
     import Modal from "../ui/Modal.svelte";
@@ -29,79 +30,136 @@
         : 0;
     $: isDeptValid = newDeptName.trim().length > 0 && wordCount >= 50;
 
-    let departments = [
-        { id: "general", label: "General Operations" },
-        { id: "hr", label: "HR & Benefits" },
-        { id: "sales", label: "Sales Material" },
-    ];
+    let departments = [];
+    let documents = [];
+    let isLoading = true;
 
-    function handleCreateDept() {
-        if (!isDeptValid) {
+    async function loadData() {
+        if (!$currentProject?.id) return;
+        isLoading = true;
+        try {
+            const [deptsRes, docsRes] = await Promise.all([
+                api.get(`/projects/${$currentProject.id}/departments`),
+                api.get(`/projects/${$currentProject.id}/documents`),
+            ]);
+            departments = Array.isArray(deptsRes)
+                ? deptsRes
+                : deptsRes?.items || [];
+            documents = Array.isArray(docsRes) ? docsRes : docsRes?.items || [];
+        } catch (e) {
+            console.error("Failed to load knowledge base data", e);
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    $: if ($currentProject?.id) {
+        loadData();
+    }
+
+    async function handleCreateDept() {
+        if (!isDeptValid || !$currentProject?.id) {
             newDeptError =
                 "Please ensure the name is filled and description is at least 50 words.";
             return;
         }
+        try {
+            const newDept = await api.post(
+                `/projects/${$currentProject.id}/departments`,
+                {
+                    name: newDeptName,
+                    description: newDeptDesc,
+                },
+            );
+            departments = [...departments, newDept];
+            selectedDepartment = newDept.id;
 
-        const newId = newDeptName.toLowerCase().replace(/[^a-z0-9]/g, "-");
-        departments = [...departments, { id: newId, label: newDeptName }];
-        selectedDepartment = newId;
-
-        // Reset form
-        showCreateDeptModal = false;
-        newDeptName = "";
-        newDeptDesc = "";
-        newDeptError = "";
+            showCreateDeptModal = false;
+            newDeptName = "";
+            newDeptDesc = "";
+            newDeptError = "";
+        } catch (e) {
+            newDeptError = e.detail || "Failed to create department";
+        }
     }
 
-    const documents = [
-        {
-            id: 1,
-            name: "Employee_Handbook_2023.pdf",
-            size: "2.4 MB",
-            dept: "HR & Benefits",
-            status: "ready",
-            date: "2 hrs ago",
-        },
-        {
-            id: 2,
-            name: "Q3_Sales_Deck_Final.pptx",
-            size: "5.1 MB",
-            dept: "Sales Material",
-            status: "processing",
-            date: "10 mins ago",
-        },
-        {
-            id: 3,
-            name: "Architecture_Overview.md",
-            size: "12 KB",
-            dept: "General Operations",
-            status: "ready",
-            date: "1 day ago",
-        },
-        {
-            id: 4,
-            name: "corrupt_data_dump.csv",
-            size: "450 KB",
-            dept: "General Operations",
-            status: "failed",
-            date: "2 days ago",
-        },
-    ];
+    let fileInput;
+    function triggerFileInput() {
+        if (fileInput) fileInput.click();
+    }
 
     function handleDragOver(e) {
         e.preventDefault();
         isDragging = true;
     }
-
     function handleDragLeave() {
         isDragging = false;
     }
 
-    function handleDrop(e) {
+    function handleFileDrop(e) {
         e.preventDefault();
         isDragging = false;
-        // Mock processing drop
-        console.log("Files dropped", e.dataTransfer.files);
+        const files = Array.from(e.dataTransfer.files);
+        uploadFiles(files);
+    }
+
+    function handleFileSelect(e) {
+        const files = Array.from(e.target.files);
+        uploadFiles(files);
+        e.target.value = null;
+    }
+
+    async function uploadFiles(files) {
+        if (!$currentProject?.id) return;
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append("file", file);
+            if (selectedDepartment)
+                formData.append("department_id", selectedDepartment);
+
+            const tempId = "temp_" + Date.now();
+            const tempDoc = {
+                id: tempId,
+                filename: file.name,
+                file_size_bytes: file.size,
+                department_id: selectedDepartment,
+                status: "processing",
+                created_at: new Date().toISOString(),
+            };
+            documents = [tempDoc, ...documents];
+
+            try {
+                await api.post(
+                    `/projects/${$currentProject.id}/documents`,
+                    formData,
+                );
+                loadData();
+            } catch (e) {
+                console.error("Upload failed", e);
+                documents = documents.map((d) =>
+                    d.id === tempId ? { ...d, status: "failed" } : d,
+                );
+                alert(
+                    "Failed to upload " +
+                        file.name +
+                        ": " +
+                        (e.detail || e.message),
+                );
+            }
+        }
+    }
+
+    async function deleteDocument(docId) {
+        if (!confirm("Delete this document?")) return;
+        try {
+            await api.delete(
+                `/projects/${$currentProject.id}/documents/${docId}`,
+            );
+            documents = documents.filter((d) => d.id !== docId);
+        } catch (e) {
+            console.error(e);
+            alert(e.detail || "Failed to delete document");
+        }
     }
 </script>
 
@@ -130,7 +188,17 @@
             <p class="text-sm text-muted mb-6">
                 {$dict.knowledge.supportedFormats}
             </p>
-            <Button variant="secondary">{$dict.knowledge.selectFiles}</Button>
+            <input
+                type="file"
+                multiple
+                bind:this={fileInput}
+                on:change={handleFileSelect}
+                class="hidden"
+                style="display: none;"
+            />
+            <Button variant="secondary" on:click={triggerFileInput}
+                >{$dict.knowledge.selectFiles}</Button
+            >
         </div>
 
         <!-- Upload Configuration -->
@@ -157,7 +225,7 @@
                         >
                             <option value="">No Department (Optional)</option>
                             {#each departments as dept}
-                                <option value={dept.id}>{dept.label}</option>
+                                <option value={dept.id}>{dept.name}</option>
                             {/each}
                         </select>
                     </div>
@@ -181,9 +249,9 @@
     <Card padding="0" className="table-card">
         <div class="p-4 border-b flex justify-between items-center bg-surface">
             <h3 class="font-bold">{$dict.knowledge.indexedFiles}</h3>
-            <Button variant="ghost" size="sm"
-                >{$dict.knowledge.refreshStatus}</Button
-            >
+            <Button variant="ghost" size="sm" on:click={loadData}>
+                {$dict.knowledge.refreshStatus}
+            </Button>
         </div>
 
         <div class="table-responsive">
@@ -207,29 +275,47 @@
                             <td class="text-left">
                                 <div class="flex items-center gap-3">
                                     <FileText size={16} class="text-muted" />
-                                    <div>
-                                        <p class="font-medium text-sm">
-                                            {doc.name}
+                                    <div class="truncate">
+                                        <p
+                                            class="font-medium text-sm truncate"
+                                            title={doc.filename}
+                                        >
+                                            {doc.filename}
                                         </p>
                                         <p class="text-xs text-muted mt-0.5">
-                                            {doc.size}
+                                            {doc.file_size_bytes
+                                                ? (
+                                                      doc.file_size_bytes /
+                                                      1024 /
+                                                      1024
+                                                  ).toFixed(2) + " MB"
+                                                : "Unknown Size"}
                                         </p>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-left"
-                                ><span class="dept-badge">{doc.dept}</span></td
+                                ><span class="dept-badge"
+                                    >{departments.find(
+                                        (d) => d.id === doc.department_id,
+                                    )?.name || "General"}</span
+                                ></td
                             >
                             <td class="text-center">
-                                <span class="status-badge {doc.status}">
-                                    {#if doc.status === "ready"}
+                                <span
+                                    class="status-badge {doc.status ===
+                                    'completed'
+                                        ? 'ready'
+                                        : doc.status}"
+                                >
+                                    {#if doc.status === "completed" || doc.status === "ready"}
                                         <!-- svelte-ignore a11y-label-has-associated-control -->
                                         <label
                                             class="flex items-center gap-1 justify-center"
                                             ><CheckCircle size={12} />
                                             {$dict.knowledge.statusReady}</label
                                         >
-                                    {:else if doc.status === "processing"}
+                                    {:else if doc.status === "processing" || doc.status === "pending"}
                                         <!-- svelte-ignore a11y-label-has-associated-control -->
                                         <label
                                             class="flex items-center gap-1 justify-center"
@@ -245,13 +331,18 @@
                                     {/if}
                                 </span>
                             </td>
-                            <td class="text-right text-sm text-muted"
-                                >{doc.date}</td
-                            >
+                            <td class="text-right text-sm text-muted">
+                                {doc.created_at
+                                    ? new Date(
+                                          doc.created_at,
+                                      ).toLocaleDateString()
+                                    : "Just now"}
+                            </td>
                             <td class="text-center">
                                 <button
                                     class="action-btn delete"
                                     title="Delete File"
+                                    on:click={() => deleteDocument(doc.id)}
                                 >
                                     <Trash2 size={16} />
                                 </button>

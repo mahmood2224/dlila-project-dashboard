@@ -1,15 +1,45 @@
 <script>
-    import { dict } from "$lib/store.js";
+    import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import Card from "../ui/Card.svelte";
     import Button from "../ui/Button.svelte";
     import Input from "../ui/Input.svelte";
     import { Users, ShieldAlert, KeyRound, Save, Plus } from "lucide-svelte";
 
-    // Config mocks
-    let projName = "Nexus AI";
-    let aiPersona = "Customer Support";
-    let description =
-        "AI Assistant handling tier-1 troubleshooting for Acme Corp.";
+    // Config mocks from active workspace
+    let projName = "";
+    let aiPersona = "";
+    let description = "";
+    let projDomain = "";
+
+    $: if ($currentProject) {
+        projName = $currentProject.name || "";
+        aiPersona = $currentProject.persona || "";
+        description = $currentProject.description || "";
+        projDomain = $currentProject.domain || "";
+    }
+
+    let isSaving = false;
+
+    async function saveProjectSettings() {
+        if (!$currentProject?.id) return;
+        isSaving = true;
+        try {
+            const res = await api.put(`/projects/${$currentProject.id}`, {
+                name: projName,
+                domain: projDomain,
+                persona: aiPersona,
+                description: description,
+            });
+            currentProject.set(res);
+            alert("Settings saved successfully!");
+        } catch (e) {
+            console.error("Save settings error:", e);
+            alert(e.detail || "Failed to save settings");
+        } finally {
+            isSaving = false;
+        }
+    }
 
     // Password mocks
     let currentPass = "";
@@ -41,6 +71,7 @@
 
                 <div class="flex-col gap-5">
                     <Input label="Project Name" bind:value={projName} />
+                    <Input label="Domain" bind:value={projDomain} />
                     <Input label="AI Persona" bind:value={aiPersona} />
 
                     <div class="input-group">
@@ -61,9 +92,13 @@
                     </div>
 
                     <div class="flex justify-end mt-2">
-                        <Button variant="primary">
+                        <Button
+                            variant="primary"
+                            on:click={saveProjectSettings}
+                            disabled={isSaving}
+                        >
                             <Save size={16} class="mr-2" />
-                            {$dict.saveChanges}
+                            {isSaving ? "Saving..." : $dict.saveChanges}
                         </Button>
                     </div>
                 </div>

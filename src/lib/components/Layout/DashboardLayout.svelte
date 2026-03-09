@@ -9,20 +9,37 @@
         LogOut,
     } from "lucide-svelte";
     import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
+    import { api } from "$lib/api.js";
     import Modal from "../ui/Modal.svelte";
     import Notifications from "../Views/Notifications.svelte";
 
-    // If somehow a direct routing hits dashboard and user/project is missing
-    if (!$currentProject) {
-        currentProject.set({
-            name: "Demo Project v1",
-            domain: "demo.com",
-            persona: "support",
-        });
-    }
-    if (!$currentUser) {
-        currentUser.set({ name: "Demo User", email: "demo@example.com" });
-    }
+    let projects = [];
+    let loadingProjects = true;
+
+    onMount(async () => {
+        try {
+            const res = await api.get("/projects");
+            // Assuming response is an array or { items: [] }
+            projects = Array.isArray(res) ? res : res?.items || [];
+
+            if (projects.length > 0) {
+                // Initialize default project if none loaded
+                if (!$currentProject) {
+                    currentProject.set(projects[0]);
+                }
+            } else {
+                // Redirect to onboarding if they own 0 projects
+                if (window.location.pathname !== "/onboarding") {
+                    goto("/onboarding");
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load projects workspace:", error);
+        } finally {
+            loadingProjects = false;
+        }
+    });
 
     let showLogoutModal = false;
     let showNotifications = false;
@@ -40,9 +57,40 @@
         <header
             class="topbar glass-layer flex justify-between items-center mb-6"
         >
-            <div class="project-info">
-                <h1 class="text-xl font-bold">{$currentProject?.name}</h1>
-                <span class="badge">{$currentProject?.persona}</span>
+            <div class="project-info flex items-center gap-3">
+                {#if loadingProjects}
+                    <div
+                        class="h-6 w-32 bg-gray-700 animate-pulse rounded"
+                    ></div>
+                {:else if projects.length > 1}
+                    <select
+                        class="workspace-selector text-xl font-bold bg-transparent outline-none cursor-pointer"
+                        value={$currentProject?.id}
+                        on:change={(e) => {
+                            const p = projects.find(
+                                (x) => x.id === e.target.value,
+                            );
+                            if (p) currentProject.set(p);
+                        }}
+                    >
+                        {#each projects as p}
+                            <option
+                                value={p.id}
+                                class="text-base"
+                                style="background: var(--surface-bg); color: var(--text-color);"
+                                >{p.name}</option
+                            >
+                        {/each}
+                    </select>
+                {:else}
+                    <h1 class="text-xl font-bold">
+                        {$currentProject?.name || "Loading..."}
+                    </h1>
+                {/if}
+
+                {#if $currentProject?.persona}
+                    <span class="badge">{$currentProject.persona}</span>
+                {/if}
             </div>
 
             <div class="header-actions flex items-center gap-4">

@@ -27,7 +27,7 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/(dashboard)" | "/" | "/(dashboard)/analytics" | "/(dashboard)/audit" | "/auth" | "/(dashboard)/billing" | "/(dashboard)/knowledge" | "/onboarding" | "/(dashboard)/playground" | "/(dashboard)/settings" | "/(dashboard)/usage";
+		RouteId(): "/(dashboard)" | "/" | "/(dashboard)/analytics" | "/(dashboard)/audit" | "/auth" | "/auth/callback" | "/(dashboard)/billing" | "/(dashboard)/knowledge" | "/onboarding" | "/(dashboard)/playground" | "/(dashboard)/settings" | "/(dashboard)/usage";
 		RouteParams(): {
 			
 		};
@@ -37,6 +37,7 @@ declare module "$app/types" {
 			"/(dashboard)/analytics": Record<string, never>;
 			"/(dashboard)/audit": Record<string, never>;
 			"/auth": Record<string, never>;
+			"/auth/callback": Record<string, never>;
 			"/(dashboard)/billing": Record<string, never>;
 			"/(dashboard)/knowledge": Record<string, never>;
 			"/onboarding": Record<string, never>;
@@ -44,7 +45,7 @@ declare module "$app/types" {
 			"/(dashboard)/settings": Record<string, never>;
 			"/(dashboard)/usage": Record<string, never>
 		};
-		Pathname(): "/" | "/analytics" | "/audit" | "/auth" | "/billing" | "/knowledge" | "/onboarding" | "/playground" | "/settings" | "/usage";
+		Pathname(): "/" | "/analytics" | "/audit" | "/auth" | "/auth/callback" | "/billing" | "/knowledge" | "/onboarding" | "/playground" | "/settings" | "/usage";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): string & {};
 	}

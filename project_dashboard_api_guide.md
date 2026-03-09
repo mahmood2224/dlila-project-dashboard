@@ -46,12 +46,12 @@ All requests (except login/registration) require a valid JWT token in the `Autho
 
 ### Social Login (Google / Apple / Facebook)
 **Endpoint:** `POST /api/v1/auth/login/social`
-- **Description:** Exchange an OAuth provider token/ID for a DLILA system JWT.
+- **Description:** Exchange an OAuth provider token for a DLILA system JWT. The backend MUST securely verify the provided `token` against the OAuth provider (Google, Apple, Facebook) before issuing a session. This prevents spoofing via raw IDs.
 - **Request Body:**
   ```json
   {
     "provider": "google",
-    "social_id": "oauth_user_id_12345",
+    "token": "eyJhbGciOiJSUzI1... (OIDC id_token or OAuth access_token)",
     "email": "owner@gmail.com",
     "full_name": "Jane Owner"
   }
@@ -99,6 +99,19 @@ All requests (except login/registration) require a valid JWT token in the `Autho
     "total_messages": 1200,
     "total_tokens_used": 1450000,
     "total_cost_usd": 2.45
+  }
+  ```
+
+### Get Historical Usage
+**Endpoint:** `GET /api/v1/projects/{project_id}/usage/history`
+- **Description:** Returns historical text and image token usage over a specified period to populate dashboard charts.
+- **Response:**
+  ```json
+  {
+    "history": [
+      { "date": "2023-10-01", "text_tokens": 12000, "image_tokens": 5 },
+      { "date": "2023-10-02", "text_tokens": 15000, "image_tokens": 8 }
+    ]
   }
   ```
 
@@ -179,6 +192,27 @@ All requests (except login/registration) require a valid JWT token in the `Autho
 
 *Allows the owner to build the RAG knowledge base.*
 
+### List Departments
+**Endpoint:** `GET /api/v1/projects/{project_id}/departments`
+- **Description:** Returns a list of all active departments within a project.
+- **Response:**
+  ```json
+  [
+    { "id": "dept_123", "name": "HR", "description": "Human Resources Documents" }
+  ]
+  ```
+
+### Create Department
+**Endpoint:** `POST /api/v1/projects/{project_id}/departments`
+- **Request Body:**
+  ```json
+  {
+    "name": "Engineering",
+    "description": "Technical specs and architecture documents."
+  }
+  ```
+- **Description:** Creates a new department within the project.
+
 ### Upload a Document
 **Endpoint:** `POST /api/v1/projects/{project_id}/documents`
 - **Content-Type:** `multipart/form-data`
@@ -214,3 +248,35 @@ All requests (except login/registration) require a valid JWT token in the `Autho
   }
   ```
 - **Description:** Runs the full Retrieval Augmented Generation pipeline and returns an answer along with the exact source document chunks cited.
+
+---
+
+## 6. Project Management
+
+*Allows the owner to view, create, and configure their DLILA projects.*
+
+### List User Projects
+**Endpoint:** `GET /api/v1/projects`
+- **Description:** Returns a list of all projects the authenticated user has access to.
+
+### Create Project
+**Endpoint:** `POST /api/v1/projects`
+- **Request Body:**
+  ```json
+  {
+    "name": "New Support Bot",
+    "domain": "support.example.com",
+    "persona": "Helpful assistant"
+  }
+  ```
+
+### Update Project Settings
+**Endpoint:** `PUT /api/v1/projects/{project_id}`
+- **Request Body:**
+  ```json
+  {
+    "name": "Updated Support Bot",
+    "domain": "support.example.com",
+    "persona": "Friendly technical expert"
+  }
+  ```

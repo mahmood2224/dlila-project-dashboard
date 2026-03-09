@@ -59,7 +59,7 @@
                     />
                 </svg>
             </div>
-            <span class="font-bold text-lg">Nexus AI</span>
+            <span class="font-bold text-lg">dalila AI</span>
         </div>
 
         <!-- Navigation Links -->

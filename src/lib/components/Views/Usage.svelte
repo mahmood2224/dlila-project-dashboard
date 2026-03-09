@@ -1,5 +1,6 @@
 <script>
-    import { dict } from "$lib/store.js";
+    import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import Card from "../ui/Card.svelte";
     import ProgressBar from "../ui/ProgressBar.svelte";
     import {
@@ -9,24 +10,59 @@
         DollarSign,
         AlertTriangle,
     } from "lucide-svelte";
-    import { onMount } from "svelte";
+    let stats = {
+        total_documents: 0,
+        total_tokens_used: 0,
+        total_cost_usd: 0.0,
+    };
 
-    // Chart mock data setup
     let bars = [];
-    const DAYS = 7;
+    let isLoading = true;
 
-    onMount(() => {
-        // Generate random data for the bar chart
-        for (let i = 0; i < DAYS; i++) {
-            const val = Math.floor(Math.random() * 80) + 20; // 20-100% capacity
-            bars.push({
-                height: val,
-                label: `Day ${i + 1}`,
-                tokens: Math.floor((val / 100) * 15000),
-            });
+    async function loadUsageData(projectId) {
+        if (!projectId) return;
+        isLoading = true;
+        try {
+            const [analyticsRes, historyRes] = await Promise.all([
+                api.get(`/projects/${projectId}/analytics`),
+                api.get(`/projects/${projectId}/usage/history?days=7`),
+            ]);
+
+            if (analyticsRes) stats = analyticsRes;
+
+            if (historyRes && historyRes.history) {
+                const maxTokens = Math.max(
+                    ...historyRes.history.map((d) => d.text_tokens || 0),
+                    100,
+                );
+
+                bars = historyRes.history.map((day) => {
+                    const tokens = day.text_tokens || 0;
+                    const dateObj = new Date(day.date);
+                    const label = dateObj.toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                    });
+
+                    return {
+                        height: (tokens / maxTokens) * 100,
+                        label: label,
+                        tokens: tokens,
+                    };
+                });
+            } else {
+                bars = [];
+            }
+        } catch (e) {
+            console.error("Failed to load usage data:", e);
+        } finally {
+            isLoading = false;
         }
-        bars = [...bars]; // trigger reactivity
-    });
+    }
+
+    $: if ($currentProject?.id) {
+        loadUsageData($currentProject.id);
+    }
 </script>
 
 <div class="usage-container fade-in">
@@ -44,7 +80,11 @@
             <div>
                 <p class="text-sm text-muted mb-1">Total Tokens Used</p>
                 <div class="flex items-baseline gap-2">
-                    <h3 class="text-2xl font-bold">128.4k</h3>
+                    <h3 class="text-2xl font-bold">
+                        {isLoading
+                            ? "..."
+                            : stats.total_tokens_used.toLocaleString()}
+                    </h3>
                     <span class="text-xs text-muted">/ 1M Limit</span>
                 </div>
             </div>
@@ -57,7 +97,11 @@
             <div>
                 <p class="text-sm text-muted mb-1">Estimated Cost</p>
                 <div class="flex items-baseline gap-2">
-                    <h3 class="text-2xl font-bold">$42.50</h3>
+                    <h3 class="text-2xl font-bold">
+                        {isLoading
+                            ? "..."
+                            : `$${stats.total_cost_usd.toFixed(2)}`}
+                    </h3>
                     <span class="text-xs text-success font-medium"
                         >+$1.20 this week</span
                     >
@@ -72,7 +116,11 @@
             <div>
                 <p class="text-sm text-muted mb-1">Documents Indexed</p>
                 <div class="flex items-baseline gap-2">
-                    <h3 class="text-2xl font-bold">420</h3>
+                    <h3 class="text-2xl font-bold">
+                        {isLoading
+                            ? "..."
+                            : stats.total_documents.toLocaleString()}
+                    </h3>
                     <span class="text-xs text-muted">/ 500 limit</span>
                 </div>
             </div>

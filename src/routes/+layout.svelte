@@ -1,10 +1,50 @@
 <script>
     import { onMount } from "svelte";
-    import { theme, locale } from "$lib/store.js";
+    import { theme, locale, authToken, currentUser } from "$lib/store.js";
+    import { api } from "$lib/api.js";
+    import { goto } from "$app/navigation";
     import { Globe } from "lucide-svelte";
     import "../app.css";
 
     onMount(() => {
+        // Hydrate User Profile on hard refresh if we have a token
+        let currentToken;
+        const unsubToken = authToken.subscribe((t) => (currentToken = t));
+
+        let currentUserState;
+        const unsubUser = currentUser.subscribe((u) => (currentUserState = u));
+
+        if (currentToken && !currentUserState) {
+            api.get("/auth/me")
+                .then((profile) => {
+                    currentUser.set({
+                        id: profile.id,
+                        name: profile.full_name || profile.username,
+                        email: profile.email,
+                        role: profile.role,
+                    });
+
+                    // If we are at the root or onboarding, check if we should skip onboarding
+                    if (
+                        window.location.pathname === "/" ||
+                        window.location.pathname === "/onboarding"
+                    ) {
+                        api.get("/projects").then((projects) => {
+                            const projectList = Array.isArray(projects)
+                                ? projects
+                                : projects?.items || [];
+                            if (projectList.length > 0) {
+                                goto("/analytics");
+                            }
+                        });
+                    }
+                })
+                .catch((e) => {
+                    console.error("Session hydration failed:", e);
+                    // API interceptor handles the 401 token clearing and redirect implicitly
+                });
+        }
+
         // Enforce the theme attribute on the document element for global CSS bridging
         const unsubscribeTheme = theme.subscribe((val) => {
             if (typeof document !== "undefined") {
@@ -24,6 +64,8 @@
         });
 
         return () => {
+            unsubToken();
+            unsubUser();
             unsubscribeTheme();
             unsubscribeLocale();
         };

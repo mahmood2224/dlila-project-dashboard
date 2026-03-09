@@ -1,5 +1,6 @@
 <script>
-    import { dict, currentUser } from "$lib/store.js";
+    import { dict, currentUser, authToken } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import { goto } from "$app/navigation";
     import Button from "./ui/Button.svelte";
     import Input from "./ui/Input.svelte";
@@ -15,18 +16,112 @@
 
     let view = "login"; // login, register, phone-login
     let email = "";
+    let fullName = ""; // Added for registration
     let password = "";
     let phone = "";
     let loading = false;
+    let errorMessage = "";
 
     async function handleAuth() {
+        if (!email || !password) {
+            errorMessage = "Please fill in all required fields.";
+            return;
+        }
+
         loading = true;
-        await new Promise((r) => setTimeout(r, 800));
-        currentUser.set({
-            name: "Demo User",
-            email: email || "demo@example.com",
-        });
-        goto("/onboarding");
+        errorMessage = "";
+
+        try {
+            if (view === "login") {
+                // Login
+                const response = await api.post("/auth/login", {
+                    username: email, // The backend login schema accepts 'username', we use email as the identifier
+                    password: password,
+                });
+
+                // Store JWT
+                authToken.set(response.access_token);
+
+                // Hydrate current user profile immediately
+                const profile = await api.get("/auth/me");
+                currentUser.set({
+                    id: profile.id,
+                    name: profile.full_name || profile.username,
+                    email: profile.email,
+                    role: profile.role,
+                });
+
+                // Skip onboarding if projects already exist
+                const projects = await api.get("/projects");
+                const projectList = Array.isArray(projects)
+                    ? projects
+                    : projects?.items || [];
+                if (projectList.length > 0) {
+                    goto("/analytics");
+                } else {
+                    goto("/onboarding");
+                }
+            } else if (view === "register") {
+                // Ensure name is provided
+                if (!fullName) {
+                    errorMessage = "Full name is required to register.";
+                    loading = false;
+                    return;
+                }
+
+                // 1. Register Account (Generate a simple username from email if backend strict on format)
+                const generatedUsername =
+                    email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "") +
+                    Math.floor(Math.random() * 1000);
+
+                await api.post("/auth/register", {
+                    username: generatedUsername,
+                    email: email,
+                    password: password,
+                    full_name: fullName,
+                });
+
+                // 2. Automatically log them in after registration
+                const loginResponse = await api.post("/auth/login", {
+                    username: email,
+                    password: password,
+                });
+
+                authToken.set(loginResponse.access_token);
+
+                // 3. Hydrate profile
+                const profile = await api.get("/auth/me");
+                currentUser.set({
+                    id: profile.id,
+                    name: profile.full_name || profile.username,
+                    email: profile.email,
+                    role: profile.role,
+                });
+
+                // Skip onboarding if projects already exist
+                const projects = await api.get("/projects");
+                const projectList = Array.isArray(projects)
+                    ? projects
+                    : projects?.items || [];
+                if (projectList.length > 0) {
+                    goto("/analytics");
+                } else {
+                    goto("/onboarding");
+                }
+            } else {
+                // Phone auth placeholder
+                errorMessage =
+                    "Phone authentication is not yet implemented backend-side.";
+            }
+        } catch (error) {
+            console.error("Auth Exception:", error);
+            errorMessage =
+                error.detail ||
+                error.message ||
+                "Authentication failed. Please check your credentials.";
+        } finally {
+            loading = false;
+        }
     }
 </script>
 
@@ -55,38 +150,38 @@
                         />
                     </svg>
                 </div>
-                <span class="brand-name">Nexus AI</span>
+                <span class="brand-name">dalila AI</span>
             </div>
 
             <div class="main-copy">
                 <h2 class="text-4xl font-bold mb-6 text-white leading-tight">
-                    Scale your operations with intelligent agents.
+                    Power your help desk with intelligent actions.
                 </h2>
                 <p class="text-lg text-white/70 mb-10 max-w-md">
-                    Join thousands of teams automating their workflows,
-                    analyzing data, and delivering better support.
+                    Automate ticket resolutions, engage customers 24/7, and
+                    streamline your support operations with AI.
                 </p>
 
                 <div class="features-list">
                     <div class="feature-item">
                         <CheckCircle2 class="text-emerald-400 mr-3" size={20} />
-                        <span>Advanced Analytics Dashboard</span>
+                        <span>Automated Ticket Resolution</span>
                     </div>
                     <div class="feature-item">
                         <CheckCircle2 class="text-emerald-400 mr-3" size={20} />
-                        <span>Custom AI Personas</span>
+                        <span>24/7 Smart Customer Support</span>
                     </div>
                     <div class="feature-item">
                         <CheckCircle2 class="text-emerald-400 mr-3" size={20} />
-                        <span>Seamless Knowledge Ingestion</span>
+                        <span>Help Desk Action Triggers</span>
                     </div>
                 </div>
             </div>
 
             <div class="testimonial">
                 <p class="quote">
-                    "Nexus has completely transformed how we interact with our
-                    own documentation. It's magic."
+                    "dalila AI has revolutionized our support desk. It handles
+                    80% of common queries instantly."
                 </p>
                 <div class="author flex items-center mt-4">
                     <div class="avatar-small mr-3">S</div>
@@ -143,6 +238,17 @@
                         <ArrowRight class="ml-2" size={18} />
                     </Button>
                 {:else}
+                    {#if view === "register"}
+                        <Input
+                            type="text"
+                            id="fullName"
+                            label="Full Name"
+                            placeholder="e.g. Jane Doe"
+                            bind:value={fullName}
+                            icon={Mail}
+                        />
+                    {/if}
+
                     <Input
                         type="email"
                         id="email"
@@ -167,6 +273,14 @@
                                 class="text-sm text-primary hover:underline transition-all"
                                 >Forgot password?</a
                             >
+                        </div>
+                    {/if}
+
+                    {#if errorMessage}
+                        <div
+                            class="text-red-500 text-sm mt-1 -mb-1 bg-red-500/10 p-2 rounded border border-red-500/20"
+                        >
+                            {errorMessage}
                         </div>
                     {/if}
 

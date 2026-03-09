@@ -1,5 +1,6 @@
 <script>
-    import { dict } from "$lib/store.js";
+    import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import Card from "../ui/Card.svelte";
     import {
         Files,
@@ -12,6 +13,34 @@
         FilePlus,
         Building,
     } from "lucide-svelte";
+
+    let stats = {
+        total_documents: 0,
+        total_departments: 0,
+        unique_clients: 0,
+        total_conversations: 0,
+        total_messages: 0,
+        total_tokens_used: 0,
+        total_cost_usd: 0.0,
+    };
+    let isLoading = true;
+
+    async function loadAnalytics(projectId) {
+        if (!projectId) return;
+        isLoading = true;
+        try {
+            const data = await api.get(`/projects/${projectId}/analytics`);
+            if (data) stats = data;
+        } catch (e) {
+            console.error("Failed to load analytics:", e);
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    $: if ($currentProject?.id) {
+        loadAnalytics($currentProject.id);
+    }
 </script>
 
 <div class="analytics-container fade-in">
@@ -34,7 +63,9 @@
                     >
                 </div>
             </div>
-            <h3 class="text-3xl font-bold mb-1">1,248</h3>
+            <h3 class="text-3xl font-bold mb-1">
+                {isLoading ? "..." : stats.total_documents.toLocaleString()}
+            </h3>
             <p class="text-sm text-muted">{$dict.analytics.kpis.totalDocs}</p>
         </Card>
 
@@ -49,7 +80,9 @@
                     >
                 </div>
             </div>
-            <h3 class="text-3xl font-bold mb-1">6</h3>
+            <h3 class="text-3xl font-bold mb-1">
+                {isLoading ? "..." : stats.total_departments.toLocaleString()}
+            </h3>
             <p class="text-sm text-muted">{$dict.analytics.kpis.departments}</p>
         </Card>
 
@@ -65,7 +98,9 @@
                     >
                 </div>
             </div>
-            <h3 class="text-3xl font-bold mb-1">45,210</h3>
+            <h3 class="text-3xl font-bold mb-1">
+                {isLoading ? "..." : stats.unique_clients.toLocaleString()}
+            </h3>
             <p class="text-sm text-muted">
                 {$dict.analytics.kpis.uniqueClients}
             </p>
@@ -83,7 +118,9 @@
                     >
                 </div>
             </div>
-            <h3 class="text-3xl font-bold mb-1">128.4k</h3>
+            <h3 class="text-3xl font-bold mb-1">
+                {isLoading ? "..." : stats.total_conversations.toLocaleString()}
+            </h3>
             <p class="text-sm text-muted">{$dict.analytics.kpis.totalConvs}</p>
         </Card>
     </div>
@@ -101,7 +138,11 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs text-muted">{$dict.analytics.estCost}</p>
-                    <h4 class="text-xl font-bold text-primary">$42.50</h4>
+                    <h4 class="text-xl font-bold text-primary">
+                        {isLoading
+                            ? "..."
+                            : `$${stats.total_cost_usd.toFixed(2)}`}
+                    </h4>
                 </div>
             </div>
 

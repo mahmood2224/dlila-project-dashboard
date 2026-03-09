@@ -1,5 +1,6 @@
 <script>
-    import { dict } from "$lib/store.js";
+    import { dict, currentProject } from "$lib/store.js";
+    import { api } from "$lib/api.js";
     import Card from "../ui/Card.svelte";
     import Button from "../ui/Button.svelte";
     import { Send, Settings2, ShieldCheck, Box } from "lucide-svelte";
@@ -20,29 +21,64 @@
         },
     ];
 
-    function sendMessage() {
-        if (!messageInput.trim()) return;
-
-        chatHistory = [...chatHistory, { role: "user", content: messageInput }];
+    async function sendMessage() {
+        if (!messageInput.trim() || !$currentProject?.id) return;
 
         const currentMsg = messageInput;
+        chatHistory = [...chatHistory, { role: "user", content: currentMsg }];
+
         messageInput = "";
         isTyping = true;
 
-        setTimeout(() => {
-            isTyping = false;
+        try {
+            const res = await api.post(
+                `/projects/${$currentProject.id}/chat/ask`,
+                {
+                    question: currentMsg,
+                    conversation_id: null,
+                    temperature: temperature,
+                    top_k:5,
+                    min_score:0.2
+                },
+            );
+
+            let traces = null;
+            if (res.sources && Array.isArray(res.sources)) {
+                traces = res.sources.map((s, i) => ({
+                    file:
+                        s.filename ||
+                        s.file_name ||
+                        s.document_name ||
+                        `Source ${i + 1}`,
+                    confidence: s.score
+                        ? `${(s.score * 100).toFixed(0)}%`
+                        : "Relevant",
+                }));
+            }
+
             chatHistory = [
                 ...chatHistory,
                 {
                     role: "assistant",
-                    content: `Here is a simulated response to: "${currentMsg}". In a real environment, this would hit the LLM endpoint with Temp=${temperature}.`,
-                    trace: [
-                        { file: "Company_Handbook.pdf", confidence: "98%" },
-                        { file: "FAQ_2023.md", confidence: "85%" },
-                    ],
+                    content:
+                        res.answer || res.response || "No answer provided.",
+                    trace: traces,
                 },
             ];
-        }, 1500);
+        } catch (e) {
+            console.error(e);
+            chatHistory = [
+                ...chatHistory,
+                {
+                    role: "assistant",
+                    content:
+                        "Error: " +
+                        (e.detail || e.message || "Failed to reach backend."),
+                },
+            ];
+        } finally {
+            isTyping = false;
+        }
     }
 
     function handleKeydown(event) {

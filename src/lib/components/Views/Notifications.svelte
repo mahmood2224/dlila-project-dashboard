@@ -58,7 +58,7 @@
             icon: Activity,
             title: "System Maintenance Scheduled",
             message:
-                "Nexus AI will undergo brief maintenance on Sunday at 2:00 AM UTC. Expected downtime is approximately 15 minutes.",
+                "dalila AI will undergo brief maintenance on Sunday at 2:00 AM UTC. Expected downtime is approximately 15 minutes.",
             timeAgo: "daysAgo",
             timeVal: 1,
             read: true,
